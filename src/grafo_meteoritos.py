@@ -35,7 +35,7 @@ logger = logging.getLogger("GrafoMeteoritos")
 # =============================================================================
 # Variáveis Constantes
 # =============================================================================
-CAMINHO_DATASET: str = "data\meteorite-landings.csv"
+CAMINHO_DATASET: str = r"data\meteorite-landings.csv"
 
 # Caixa delimitadora geográfica — América do Sul
 LAT_MIN: float = -55.0
