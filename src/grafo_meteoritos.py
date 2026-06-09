@@ -293,36 +293,57 @@ class GrafoMeteoritos:
     # ===============================
     # Auxiliares de Construção
     # ===============================
-    def visualizar_grafo_espacial(self) -> None:
+    def visualizar_grafo_topologico(self) -> None:
         """
-        Gera uma visualização 2D espacial.
-        Usa o NetworkX apenas para renderização visual, mantendo a 
-        integridade acadêmica da estrutura de dados original.
+        Gera uma visualização clássica de Grafo (Layout de Força/Mola).
+        Remove eixos cartesianos e foca estritamente na topologia da rede
+        (nós conectados por arestas), eliminando a aparência de dispersão.
         """
-        logger.info("Gerando visualização espacial do grafo...")
+
+        logger.info("Gerando visualização topológica do grafo...")
         grafo_nx = nx.Graph()
-        posicoes_geograficas = {}
 
-        for id_no, met in self._nos.items():
-            grafo_nx.add_node(id_no)
-            posicoes_geograficas[id_no] = (met.lon, met.lat)
-
+        # Filtrar para plotar APENAS nós que possuem conexões.
+        nos_conectados = set()
         for aresta in self._arestas:
+            nos_conectados.add(aresta.id_origem)
+            nos_conectados.add(aresta.id_destino)
+            # Adiciona a aresta no NetworkX
             grafo_nx.add_edge(aresta.id_origem, aresta.id_destino, weight=aresta.distancia_km)
 
-        plt.figure(figsize=(10, 12))
-        nx.draw_networkx_nodes(grafo_nx, posicoes_geograficas, node_size=25, node_color='firebrick', alpha=0.8)
-        nx.draw_networkx_edges(grafo_nx, posicoes_geograficas, alpha=0.2, edge_color='steelblue')
+        if not nos_conectados:
+            logger.warning("Não há arestas para plotar. Tente aumentar o LIMIAR_DISTANCIA_ARESTA_KM.")
+            return
 
-        plt.title("Rede de Dispersão de Meteoritos (América do Sul)", fontsize=14, fontweight='bold')
-        plt.xlabel("Longitude (°E)")
-        plt.ylabel("Latitude (°N)")
-        plt.grid(True, linestyle='--', alpha=0.5)
+        # Configuração da tela
+        plt.figure(figsize=(12, 8))
+
+        # Passo 2: Usar o Spring Layout (Algoritmo de atração/repulsão)
+        posicoes = nx.spring_layout(grafo_nx, seed=42, k=0.15)
+
+        # Desenhar com foco total nas arestas
+        nx.draw_networkx_nodes(
+            grafo_nx, 
+            posicoes, 
+            node_size=60, 
+            node_color='#ff7f0e', # Laranja escuro
+            edgecolors='black'
+        )
         
-        plt.gca().spines['top'].set_visible(False)
-        plt.gca().spines['right'].set_visible(False)
+        nx.draw_networkx_edges(
+            grafo_nx, 
+            posicoes, 
+            width=2.0, 
+            alpha=0.8, 
+            edge_color='#1f77b4'
+        )
+
+        plt.title("Estrutura Topológica do Grafo de Meteoritos", fontsize=16, fontweight='bold')
         
-        logger.info("Abrindo interface gráfica...")
+        plt.axis('off') 
+        plt.tight_layout()
+        
+        logger.info("Abrindo interface gráfica (Grafo Topológico)...")
         plt.show()
 
     def _adicionar_no(self, meteorito: Meteorito) -> None:
@@ -1162,7 +1183,7 @@ def main() -> None:
 
     # Visualização
     logger.info("Abrindo interface gráfica do mapa de dispersão...")
-    grafo.visualizar_grafo_espacial()
+    grafo.visualizar_grafo_topologico()
 
 
 if __name__ == "__main__":
